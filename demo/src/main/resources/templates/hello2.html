@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hello2 연습문제</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body class="bg-light">
+    <main class="container py-5">
+        <section class="card border-0 shadow-sm mx-auto" style="max-width: 760px;">
+            <div class="card-body p-5">
+                <span class="badge bg-success mb-3">5개 속성 출력</span>
+                <h1 class="mb-4">두 번째 Hello 페이지</h1>
+                <dl class="row fs-5">
+                    <dt class="col-sm-4">학번</dt><dd class="col-sm-8" th:text="${studentId}">20250646</dd>
+                    <dt class="col-sm-4">과목</dt><dd class="col-sm-8" th:text="${course}">자바웹프로그래밍(2)</dd>
+                    <dt class="col-sm-4">실습</dt><dd class="col-sm-8" th:text="${week}">2주차 연습문제</dd>
+                    <dt class="col-sm-4">프레임워크</dt><dd class="col-sm-8" th:text="${framework}">Spring Boot</dd>
+                    <dt class="col-sm-4">학습 목표</dt><dd class="col-sm-8" th:text="${goal}">MVC 이해</dd>
+                </dl>
+                <div class="d-flex gap-2 mt-4">
+                    <a class="btn btn-success" href="/hello" th:href="@{/hello}">첫 번째 Hello</a>
+                    <a class="btn btn-outline-secondary" href="/" th:href="@{/}">포트폴리오 메인</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

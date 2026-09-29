@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hello 페이지</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body class="bg-light">
+    <main class="container py-5">
+        <section class="card border-0 shadow-sm mx-auto" style="max-width: 720px;">
+            <div class="card-body p-5">
+                <span class="badge bg-primary mb-3">Spring MVC</span>
+                <h1 class="mb-3">안녕하세요!</h1>
+                <p class="lead" th:text="${data}">반갑습니다.</p>
+                <div class="d-flex gap-2 mt-4">
+                    <a class="btn btn-primary" href="/hello2" th:href="@{/hello2}">두 번째 Hello 페이지</a>
+                    <a class="btn btn-outline-secondary" href="/" th:href="@{/}">포트폴리오 메인</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

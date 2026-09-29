@@ -1,0 +1,69 @@
+:root {
+    --ink: #172033;
+    --muted: #64748b;
+    --surface: #ffffff;
+    --line: #e2e8f0;
+    --accent: #14b8a6;
+    --accent-dark: #0f766e;
+    --violet: #535da1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    color: var(--ink);
+    background: #f8fafc;
+    font-family: "Noto Sans KR", "DM Sans", sans-serif;
+    line-height: 1.75;
+}
+
+a { color: inherit; }
+
+.detail-hero {
+    color: #fff;
+    background: linear-gradient(135deg, var(--violet), #334155 65%, var(--accent-dark));
+    padding: 24px 0 86px;
+}
+
+.detail-nav,
+.detail-wrap {
+    width: min(1080px, calc(100% - 40px));
+    margin: 0 auto;
+}
+
+.detail-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.detail-nav a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.detail-heading { max-width: 760px; margin-top: 72px; }
+.detail-heading .eyebrow { color: #99f6e4; font-weight: 700; letter-spacing: .12em; }
+.detail-heading h1 { margin: 12px 0 18px; font-size: clamp(2.4rem, 7vw, 5rem); line-height: 1.08; }
+.detail-heading p { margin: 0; color: #e2e8f0; font-size: 1.16rem; }
+
+.detail-content { margin-top: -42px; padding-bottom: 80px; }
+.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.detail-card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 32px; box-shadow: 0 16px 45px rgba(15, 23, 42, .08); }
+.detail-card.wide { grid-column: 1 / -1; }
+.detail-card h2 { margin-top: 0; font-size: 1.4rem; }
+.detail-card ul { margin-bottom: 0; padding-left: 1.25rem; }
+.skill-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+.skill-tags span { padding: 8px 14px; border-radius: 999px; color: var(--accent-dark); background: #ccfbf1; font-weight: 700; }
+.roadmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.roadmap article { border-left: 4px solid var(--accent); padding: 4px 0 4px 16px; }
+.roadmap strong { display: block; margin-bottom: 8px; }
+.detail-footer { padding: 30px 0; text-align: center; color: var(--muted); }
+
+@media (max-width: 760px) {
+    .detail-grid, .roadmap { grid-template-columns: 1fr; }
+    .detail-card.wide { grid-column: auto; }
+    .detail-heading { margin-top: 52px; }
+}
