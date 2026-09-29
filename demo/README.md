@@ -2,6 +2,8 @@
 
 자바웹프로그래밍(2) 수업 실습 프로젝트입니다.
 
+- GitHub 저장소: https://github.com/Yoonsoooo/SPRING_BOOT_20250646
+
 ## 2주차 - 개발환경 설정 및 테스트
 
 - JDK 25와 Spring Boot 4.1.1 설정
