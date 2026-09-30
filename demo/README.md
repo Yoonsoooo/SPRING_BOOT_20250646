@@ -45,6 +45,7 @@
    ```properties
    spring.datasource.username=root
    spring.datasource.password=root비밀번호
+   remember-me.key=아무거나_긴_비밀키
    ```
 4. 서버 실행 → `testdb` 테이블 자동 생성 확인 → `sql/week4_testdb.sql`의 INSERT 실행
 5. `http://localhost:8080/testdb` 접속
@@ -69,6 +70,17 @@
 - 로그아웃은 CSRF 보호 때문에 POST 폼으로만 동작하고, 세션과 `JSESSIONID` 쿠키를 삭제
 - DB 비밀번호가 GitHub에 노출되지 않도록 `application-secret.properties`로 분리하고 `.gitignore`에 등록
 - 테스트 : 가입 시 비밀번호가 `$2a$10$...` 60자 해시로 저장되는지, 로그인 성공/실패, 로그아웃, CSRF 차단 확인 ([MemberSecurityTests.java](src/test/java/com/example/demo/MemberSecurityTests.java))
+
+### 5주차 연습문제 - 로그인 기능 개선하기
+
+- ① 로그인 상태 유지(remember-me)
+  - `SecurityConfig` 로그아웃 설정 뒤에 `.rememberMe()` 추가 : `key(비밀키)`, `tokenValiditySeconds(7일)`
+  - `login.html`의 `로그인 상태 유지` 체크박스(`name="remember-me"`)를 체크하고 로그인하면 7일짜리 `remember-me` 쿠키 발급
+  - 브라우저를 닫아 `JSESSIONID`가 사라져도 `remember-me` 쿠키로 자동 로그인
+  - 비밀키는 공개 저장소에 노출되지 않도록 `application-secret.properties`의 `remember-me.key`에 저장
+- ② 비밀번호 확인 검증
+  - `MemberService.signup()`에서 `password`와 `passwordConfirm` 비교
+  - 다르면 "비밀번호가 일치하지 않습니다." 출력, 입력한 아이디·이름은 유지, DB에는 저장하지 않음
 
 ## Lighthouse 성능 점검
 

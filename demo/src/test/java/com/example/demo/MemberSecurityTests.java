@@ -8,12 +8,16 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import jakarta.servlet.http.Cookie;
+
 import com.example.demo.model.domain.Member;
 import com.example.demo.model.repository.MemberRepository;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.logout;
@@ -22,6 +26,7 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -120,6 +125,60 @@ class MemberSecurityTests {
 	void logoutRedirectsToLoginPage() throws Exception {
 		mockMvc.perform(logout("/logout"))
 				.andExpect(redirectedUrl("/login?logout"));
+	}
+
+	// [5주차 연습문제 ②] 비밀번호 확인이 다르면 오류 메시지를 보여주고 DB에 저장하지 않는다.
+	@Test
+	void signupWithMismatchedPasswordIsRejectedAndNotSaved() throws Exception {
+		mockMvc.perform(post("/signup").with(csrf())
+						.param("username", "student2")
+						.param("password", "123123")
+						.param("passwordConfirm", "321321")
+						.param("name", "김철수"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("비밀번호가 일치하지 않습니다.")))
+				.andExpect(content().string(containsString("value=\"student2\"")));
+
+		assertFalse(memberRepository.existsByUsername("student2"));
+	}
+
+	// [5주차 연습문제 ①] 로그인 상태 유지 체크 시 7일짜리 remember-me 쿠키가 발급된다.
+	@Test
+	void rememberMeCheckboxIssuesSevenDayCookie() throws Exception {
+		signup("student1", "123123");
+
+		mockMvc.perform(post("/login").with(csrf())
+						.param("username", "student1")
+						.param("password", "123123")
+						.param("remember-me", "on"))
+				.andExpect(authenticated().withUsername("student1"))
+				.andExpect(cookie().exists("remember-me"))
+				.andExpect(cookie().maxAge("remember-me", 60 * 60 * 24 * 7));
+	}
+
+	// 브라우저를 닫아 세션(JSESSIONID)이 없어져도 remember-me 쿠키만으로 회원목록에 들어갈 수 있다.
+	@Test
+	void rememberMeCookieAloneKeepsUserLoggedIn() throws Exception {
+		signup("student1", "123123");
+
+		Cookie rememberMe = mockMvc.perform(post("/login").with(csrf())
+						.param("username", "student1")
+						.param("password", "123123")
+						.param("remember-me", "on"))
+				.andReturn().getResponse().getCookie("remember-me");
+		assertNotNull(rememberMe);
+
+		mockMvc.perform(get("/testdb").cookie(rememberMe))
+				.andExpect(status().isOk())
+				.andExpect(authenticated().withUsername("student1"));
+	}
+
+	@Test
+	void loginWithoutRememberMeIssuesNoCookie() throws Exception {
+		signup("student1", "123123");
+
+		mockMvc.perform(formLogin("/login").user("student1").password("123123"))
+				.andExpect(cookie().doesNotExist("remember-me"));
 	}
 
 	private void signup(String username, String password) throws Exception {

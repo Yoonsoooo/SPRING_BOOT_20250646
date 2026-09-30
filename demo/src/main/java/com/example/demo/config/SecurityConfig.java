@@ -1,5 +1,6 @@
 package com.example.demo.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,6 +12,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration // 스프링 설정 클래스 등록
 @EnableWebSecurity // 스프링 시큐리티 활성화
 public class SecurityConfig {
+
+    // [5주차 연습문제] remember-me 쿠키 서명용 비밀키 (GitHub에 노출되지 않도록 application-secret.properties 에 저장)
+    @Value("${remember-me.key}")
+    private String rememberMeKey;
 
     @Bean // 비밀번호 암호화 객체 등록 (BCrypt 해시)
     public PasswordEncoder passwordEncoder() {
@@ -37,7 +42,11 @@ public class SecurityConfig {
                 .logoutUrl("/logout") // 로그아웃 처리 URL (POST)
                 .logoutSuccessUrl("/login?logout") // 로그아웃 후 이동
                 .invalidateHttpSession(true) // 세션 삭제
-                .deleteCookies("JSESSIONID", "remember-me")); // 쿠키 삭제
+                .deleteCookies("JSESSIONID", "remember-me")) // 쿠키 삭제
+            .rememberMe(remember -> remember // 4. [5주차 연습문제] 로그인 상태 유지
+                .key(rememberMeKey) // 쿠키 위조 방지용 비밀키
+                .rememberMeParameter("remember-me") // login.html 체크박스 name
+                .tokenValiditySeconds(60 * 60 * 24 * 7)); // 7일 유지
         return http.build();
     }
 }
