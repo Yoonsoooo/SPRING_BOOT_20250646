@@ -29,7 +29,7 @@
 4주차 데이터베이스 수정 완료
 
 - `pom.xml`에서 Spring Data JPA, MySQL 드라이버(`mysql-connector-j`) 주석 해제
-- `application.properties`에 MySQL(`localhost:3306/spring`) 접속 정보 추가, 비밀번호는 git에 올라가지 않는 `.env`에서 읽음
+- `application.properties`에 MySQL(`localhost:3306/spring`) 접속 정보 추가, DB 계정은 git에 올라가지 않는 `application-secret.properties`로 분리(5주차에 변경)
 - 계층별 패키지 구조로 변경: `controller` / `model.domain` / `model.repository` / `model.service`
 - 엔티티 [TestDB.java](src/main/java/com/example/demo/model/domain/TestDB.java) → 리포지토리 [TestRepository.java](src/main/java/com/example/demo/model/repository/TestRepository.java) → 서비스 [TestService.java](src/main/java/com/example/demo/model/service/TestService.java) → 컨트롤러 `/testdb`
 - 연습문제: 엔티티에 나이(`age`), 성별(`gender`) 컬럼 추가, INSERT 후 [testdb.html](src/main/resources/templates/testdb.html)에서 표로 출력
@@ -40,9 +40,35 @@
 
 1. MySQL 8 설치 (Server only, root / spring 계정 생성)
 2. `create database spring;`
-3. `.env.example`을 `.env`로 복사하고 `DB_PASSWORD`에 root 비밀번호 입력
+3. `src/main/resources/application-secret.properties` 파일을 만들고 DB 계정 2줄 작성
+
+   ```properties
+   spring.datasource.username=root
+   spring.datasource.password=root비밀번호
+   ```
 4. 서버 실행 → `testdb` 테이블 자동 생성 확인 → `sql/week4_testdb.sql`의 INSERT 실행
 5. `http://localhost:8080/testdb` 접속
+
+## 5주차 - 로그인/로그아웃 및 암호화
+
+5주차 로그인/로그아웃, 암호화 완료
+
+- `pom.xml`에 Spring Security, `thymeleaf-extras-springsecurity6` 의존성 추가
+- 교수님 제공 [login.html](src/main/resources/templates/login.html), [signup.html](src/main/resources/templates/signup.html) 적용
+- 직접 꾸민 포트폴리오라서 `index.html`은 전체 교체 대신 `index_네비게이션_교체부분.html`의 ①~④만 반영
+  - `xmlns:sec` 선언, 로그인 사용자 표시 스타일, 모바일/PC 로그인·로그아웃 버튼, 메뉴에 `회원목록` 추가
+- 새로 작성한 자바 파일 6개
+  - [SecurityConfig.java](src/main/java/com/example/demo/config/SecurityConfig.java) : BCrypt 암호화 빈, URL 접근 규칙, 폼 로그인, 로그아웃
+  - [MemberController.java](src/main/java/com/example/demo/controller/MemberController.java) : `/login`, `/signup` 화면과 회원가입 처리
+  - [Member.java](src/main/java/com/example/demo/model/domain/Member.java) : `member` 테이블 엔티티(아이디 중복 불가, 권한 USER)
+  - [MemberForm.java](src/main/java/com/example/demo/model/dto/MemberForm.java) : 회원가입 화면 데이터 DTO
+  - [MemberRepository.java](src/main/java/com/example/demo/model/repository/MemberRepository.java) : `findByUsername`, `existsByUsername`
+  - [MemberService.java](src/main/java/com/example/demo/model/service/MemberService.java) : 가입 시 비밀번호 BCrypt 암호화, `UserDetailsService`로 로그인 회원 조회
+- 누구나 접근 : 메인, 로그인, 회원가입, 공개 실습/상세 페이지, CSS·JS·이미지
+- 로그인 필요 : `/testdb`(회원목록) → 비로그인 시 로그인 화면으로 이동, 로그인 후 원래 페이지로 복귀
+- 로그아웃은 CSRF 보호 때문에 POST 폼으로만 동작하고, 세션과 `JSESSIONID` 쿠키를 삭제
+- DB 비밀번호가 GitHub에 노출되지 않도록 `application-secret.properties`로 분리하고 `.gitignore`에 등록
+- 테스트 : 가입 시 비밀번호가 `$2a$10$...` 60자 해시로 저장되는지, 로그인 성공/실패, 로그아웃, CSRF 차단 확인 ([MemberSecurityTests.java](src/test/java/com/example/demo/MemberSecurityTests.java))
 
 ## Lighthouse 성능 점검
 

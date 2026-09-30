@@ -11,3 +11,4 @@
 - 2주차 - `/hello`, `/hello2` URL 매핑과 Thymeleaf 출력
 - 3주차 - 포트폴리오 메인 화면(TemplateMo) 적용
 - 4주차 - 데이터베이스 수정 완료 (MySQL + JPA 연동, `/testdb` 사용자 목록 출력)
+- 5주차 - 로그인/로그아웃, 암호화 완료 (Spring Security + BCrypt, 회원가입·로그인·로그아웃)

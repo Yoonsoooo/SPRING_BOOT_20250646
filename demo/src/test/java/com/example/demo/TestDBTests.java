@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
@@ -69,6 +70,7 @@ class TestDBTests {
 	}
 
 	@Test
+	@WithMockUser // 5주차 : /testdb 는 로그인한 회원만 볼 수 있다.
 	void testdbPageRendersUserTable() throws Exception {
 		mockMvc.perform(get("/testdb"))
 				.andExpect(status().isOk())
