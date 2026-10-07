@@ -12,3 +12,4 @@
 - 3주차 - 포트폴리오 메인 화면(TemplateMo) 적용
 - 4주차 - 데이터베이스 수정 완료 (MySQL + JPA 연동, `/testdb` 사용자 목록 출력)
 - 5주차 - 로그인/로그아웃, 암호화 완료 (Spring Security + BCrypt, 회원가입·로그인·로그아웃) + 연습문제(로그인 상태 유지, 비밀번호 확인)
+- 6주차 - 권한(ROLE) 접근 제어, 관리자 페이지 분리 완료 (USER/ADMIN, `/admin/**` 잠금, `@PreAuthorize` 이중 잠금, 403 화면)

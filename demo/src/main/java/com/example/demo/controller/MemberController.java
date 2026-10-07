@@ -1,11 +1,14 @@
 package com.example.demo.controller;
 
+import java.security.Principal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import com.example.demo.model.domain.Member;
 import com.example.demo.model.dto.MemberForm;
 import com.example.demo.model.service.MemberService;
 
@@ -34,5 +37,12 @@ public class MemberController {
             return "signup"; // 입력값 유지한 채 다시 가입 화면
         }
         return "redirect:/login?signup"; // 성공 → 로그인 화면
+    }
+
+    @GetMapping("/mypage") // [6주차] 내 정보 : 로그인한 사람만
+    public String mypage(Principal principal, Model model) { // 현재 로그인 사용자
+        Member member = memberService.findByUsername(principal.getName());
+        model.addAttribute("member", member);
+        return "mypage"; // mypage.html 연결
     }
 }

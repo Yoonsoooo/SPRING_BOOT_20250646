@@ -82,6 +82,23 @@
   - `MemberService.signup()`에서 `password`와 `passwordConfirm` 비교
   - 다르면 "비밀번호가 일치하지 않습니다." 출력, 입력한 아이디·이름은 유지, DB에는 저장하지 않음
 
+## 6주차 - 권한 관리 및 관리자 페이지
+
+6주차 권한(ROLE) 접근 제어, 관리자 페이지 분리 완료
+
+- 교수님 제공 화면 적용 : [mypage.html](src/main/resources/templates/mypage.html), [admin/members.html](src/main/resources/templates/admin/members.html), [error/403.html](src/main/resources/templates/error/403.html)
+- 직접 꾸민 포트폴리오라서 `index.html`은 `index_네비게이션_교체부분.html`의 ①~③만 반영
+  - 권한 배지 스타일, `내 정보` 메뉴(로그인 사용자), 빨간 `관리자` 메뉴(ADMIN만), 아이디 옆 권한 배지
+- 자바 파일 4개
+  - [AdminController.java](src/main/java/com/example/demo/controller/AdminController.java) (신규) : `/admin/members` 회원 목록, 권한 변경, 회원 삭제 (`@RequestMapping("/admin")`, PRG 패턴)
+  - [SecurityConfig.java](src/main/java/com/example/demo/config/SecurityConfig.java) : `/admin/**` → `hasRole("ADMIN")`, `@EnableMethodSecurity`
+  - [MemberController.java](src/main/java/com/example/demo/controller/MemberController.java) : `/mypage` (`Principal`로 로그인한 내 정보만 조회 → IDOR 차단)
+  - [MemberService.java](src/main/java/com/example/demo/model/service/MemberService.java) : `findByUsername`, `findAll`, `changeRole`(ROLES 화이트리스트), `deleteMember`, `@PreAuthorize("hasRole('ADMIN')")`
+- 관리자 계정 : `/signup`에서 `admin / 1234` 가입 → 제공 SQL(`UPDATE member SET role = 'ADMIN' WHERE username = 'admin'`)로 권한 부여 → 다시 로그인 (실습용 계정)
+- 접근 제어 3단계 : ① 화면 `sec:authorize`(숨기기만) ② URL `requestMatchers`(1차 잠금) ③ 메서드 `@PreAuthorize`(2차 잠금)
+- 결과 : 비로그인 `/admin/members` → 302 로그인 화면, USER → 403 접근 거부 화면, ADMIN → 200 회원 관리
+- 테스트 : [AdminSecurityTests.java](src/test/java/com/example/demo/AdminSecurityTests.java) - 302/403/200, USER의 권한 상승 차단, 서비스 직접 호출도 `@PreAuthorize`로 차단(이중 잠금), 허용되지 않는 권한 거부, 메뉴·배지 표시
+
 ## Lighthouse 성능 점검
 
 - 2026-09-16 로컬 서버 측정: 데스크톱 96점, 모바일 60점

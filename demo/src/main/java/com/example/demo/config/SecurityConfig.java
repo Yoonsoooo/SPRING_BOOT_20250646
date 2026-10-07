@@ -3,6 +3,7 @@ package com.example.demo.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration // 스프링 설정 클래스 등록
 @EnableWebSecurity // 스프링 시큐리티 활성화
+@EnableMethodSecurity // [6주차] 메서드 보안 활성화 : @PreAuthorize 사용
 public class SecurityConfig {
 
     // [5주차 연습문제] remember-me 쿠키 서명용 비밀키 (GitHub에 노출되지 않도록 application-secret.properties 에 저장)
@@ -32,7 +34,8 @@ public class SecurityConfig {
                 .requestMatchers("/hello2", "/detailed_ai.html",
                                  "/detailed_security.html", "/detailed_game.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
-                .anyRequest().authenticated())
+                .requestMatchers("/admin/**").hasRole("ADMIN") // [6주차] 관리자만
+                .anyRequest().authenticated()) // 나머지 : 로그인 필요
             .formLogin(form -> form // 2. 폼 로그인 설정 (인증)
                 .loginPage("/login")
                 .defaultSuccessUrl("/")
