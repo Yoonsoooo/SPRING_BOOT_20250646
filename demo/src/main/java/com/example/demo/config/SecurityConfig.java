@@ -35,6 +35,7 @@ public class SecurityConfig {
                                  "/detailed_security.html", "/detailed_game.html").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN") // [6주차] 관리자만
+                .requestMatchers("/testdb").hasAnyRole("ADMIN", "MANAGER") // [6주차 연습문제 ②] 회원목록 : 관리자·매니저만
                 .anyRequest().authenticated()) // 나머지 : 로그인 필요
             .formLogin(form -> form // 2. 폼 로그인 설정 (인증)
                 .loginPage("/login")

@@ -106,7 +106,8 @@ https://templatemo.com/tm-578-first-portfolio
                         </li>
 
                         <!-- [5주차] 회원 전용 페이지 : 로그인하지 않으면 로그인 화면으로 이동 -->
-                        <li class="nav-item">
+                        <!-- [6주차 연습문제 추가 도전] 회원목록 메뉴는 ADMIN·MANAGER 에게만 보인다 (URL 은 SecurityConfig 에서 잠금) -->
+                        <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'MANAGER')">
                             <a class="nav-link" th:href="@{/testdb}">회원목록</a>
                         </li>
 

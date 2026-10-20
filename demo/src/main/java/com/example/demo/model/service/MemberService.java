@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.*; // User, UserDetails 등
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,8 @@ import com.example.demo.model.repository.MemberRepository;
 public class MemberService implements UserDetailsService { // 로그인을 위한 인터페이스 제공
 
     // [6주차] 관리자가 부여할 수 있는 권한 (화면에서 넘어온 값을 그대로 믿지 않는다)
-    private static final List<String> ROLES = List.of("USER", "ADMIN");
+    // [6주차 연습문제 ②] MANAGER 권한 추가
+    private static final List<String> ROLES = List.of("USER", "MANAGER", "ADMIN");
 
     @Autowired
     private MemberRepository memberRepository;
@@ -59,6 +61,7 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
         }
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+        checkNotMyself(member); // [6주차 연습문제 ①] 관리자 본인 보호
         member.setRole(role);
         memberRepository.save(member); // UPDATE (id 가 있으면 수정)
     }
@@ -67,7 +70,17 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
     public void deleteMember(Long id) { // 회원 삭제
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+        checkNotMyself(member); // [6주차 연습문제 ①] 관리자 본인 보호
         memberRepository.delete(member); // DELETE
+    }
+
+    // [6주차 연습문제 ①] 관리자가 자기 자신을 USER 로 바꾸거나 삭제하면 관리자가 0명이 될 수 있다.
+    // SecurityContextHolder : 컨트롤러가 아닌 곳(서비스)에서도 현재 로그인 사용자를 꺼낼 수 있다.
+    private void checkNotMyself(Member member) {
+        String loginUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (member.getUsername().equals(loginUsername)) {
+            throw new IllegalArgumentException("자기 자신의 권한 변경·삭제는 할 수 없습니다.");
+        }
     }
 
     @Override // 로그인 시 시큐리티가 자동 호출

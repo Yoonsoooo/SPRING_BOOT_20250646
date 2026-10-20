@@ -14,6 +14,7 @@ import com.example.demo.model.domain.Member;
 import com.example.demo.model.repository.MemberRepository;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -61,7 +62,8 @@ class MemberSecurityTests {
 	@Test
 	void mainPageShowsLoginButtonBeforeLogin() throws Exception {
 		mockMvc.perform(get("/"))
-				.andExpect(content().string(containsString("회원목록")))
+				// [6주차 연습문제 추가 도전] 회원목록 메뉴는 ADMIN·MANAGER 에게만 보인다.
+				.andExpect(content().string(not(containsString("href=\"/testdb\""))))
 				.andExpect(content().string(containsString("로그인")));
 	}
 
@@ -156,7 +158,7 @@ class MemberSecurityTests {
 				.andExpect(cookie().maxAge("remember-me", 60 * 60 * 24 * 7));
 	}
 
-	// 브라우저를 닫아 세션(JSESSIONID)이 없어져도 remember-me 쿠키만으로 회원목록에 들어갈 수 있다.
+	// 브라우저를 닫아 세션(JSESSIONID)이 없어져도 remember-me 쿠키만으로 로그인 전용 페이지(내 정보)에 들어갈 수 있다.
 	@Test
 	void rememberMeCookieAloneKeepsUserLoggedIn() throws Exception {
 		signup("student1", "123123");
@@ -168,7 +170,7 @@ class MemberSecurityTests {
 				.andReturn().getResponse().getCookie("remember-me");
 		assertNotNull(rememberMe);
 
-		mockMvc.perform(get("/testdb").cookie(rememberMe))
+		mockMvc.perform(get("/mypage").cookie(rememberMe))
 				.andExpect(status().isOk())
 				.andExpect(authenticated().withUsername("student1"));
 	}

@@ -70,7 +70,7 @@ class TestDBTests {
 	}
 
 	@Test
-	@WithMockUser // 5주차 : /testdb 는 로그인한 회원만 볼 수 있다.
+	@WithMockUser(roles = "MANAGER") // 6주차 연습문제 : /testdb 는 ADMIN·MANAGER 만 볼 수 있다.
 	void testdbPageRendersUserTable() throws Exception {
 		mockMvc.perform(get("/testdb"))
 				.andExpect(status().isOk())

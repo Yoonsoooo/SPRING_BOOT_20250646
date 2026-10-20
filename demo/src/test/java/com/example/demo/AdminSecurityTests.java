@@ -110,16 +110,84 @@ class AdminSecurityTests {
 		assertEquals("ADMIN", memberRepository.findById(student1.getId()).orElseThrow().getRole());
 	}
 
-	// 슬라이드 16 ROLES 화이트리스트 : 허용되지 않은 권한(MANAGER, SUPER)은 거부
+	// 슬라이드 16 ROLES 화이트리스트 : 허용되지 않은 권한(SUPER 등)은 거부
 	@Test
 	@WithMockUser(username = "admin", roles = "ADMIN")
 	void roleOutsideWhitelistIsRejected() throws Exception {
-		for (String role : new String[] {"MANAGER", "SUPER"}) {
+		for (String role : new String[] {"SUPER", "ROLE_ADMIN"}) {
 			mockMvc.perform(post("/admin/members/{id}/role", student1.getId()).with(csrf()).param("role", role))
 					.andExpect(redirectedUrl("/admin/members"))
 					.andExpect(flash().attribute("error", "허용되지 않는 권한입니다 : " + role));
 		}
 		assertEquals("USER", memberRepository.findById(student1.getId()).orElseThrow().getRole());
+	}
+
+	// [연습문제 ①] 관리자 본인 보호 : 자기 자신을 USER 로 바꾸거나 삭제할 수 없다.
+	@Test
+	@WithMockUser(username = "admin", roles = "ADMIN")
+	void adminCannotChangeOwnRole() throws Exception {
+		mockMvc.perform(post("/admin/members/{id}/role", admin.getId()).with(csrf()).param("role", "USER"))
+				.andExpect(redirectedUrl("/admin/members"))
+				.andExpect(flash().attribute("error", "자기 자신의 권한 변경·삭제는 할 수 없습니다."));
+
+		assertEquals("ADMIN", memberRepository.findById(admin.getId()).orElseThrow().getRole());
+	}
+
+	@Test
+	@WithMockUser(username = "admin", roles = "ADMIN")
+	void adminCannotDeleteThemself() throws Exception {
+		mockMvc.perform(post("/admin/members/{id}/delete", admin.getId()).with(csrf()))
+				.andExpect(redirectedUrl("/admin/members"))
+				.andExpect(flash().attribute("error", "자기 자신의 권한 변경·삭제는 할 수 없습니다."));
+
+		assertTrue(memberRepository.existsById(admin.getId()));
+	}
+
+	// [연습문제 ②] 회원 관리에서 MANAGER 부여 가능
+	@Test
+	@WithMockUser(username = "admin", roles = "ADMIN")
+	void adminCanGrantManagerRole() throws Exception {
+		mockMvc.perform(post("/admin/members/{id}/role", student1.getId()).with(csrf()).param("role", "MANAGER"))
+				.andExpect(flash().attribute("message", "권한을 MANAGER (으)로 변경했습니다."));
+
+		assertEquals("MANAGER", memberRepository.findById(student1.getId()).orElseThrow().getRole());
+	}
+
+	// [연습문제 ②] 기대 결과 표 : /mypage · /testdb · /admin/** 를 권한별로 확인
+	@Test
+	@WithMockUser(username = "student1", roles = "USER")
+	void userAccessMatrix() throws Exception {
+		mockMvc.perform(get("/mypage")).andExpect(status().isOk());
+		mockMvc.perform(get("/testdb")).andExpect(status().isForbidden());
+		mockMvc.perform(get("/admin/members")).andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(username = "manager1", roles = "MANAGER")
+	void managerAccessMatrix() throws Exception {
+		memberRepository.save(member("manager1", "매니저", "MANAGER"));
+
+		mockMvc.perform(get("/mypage")).andExpect(status().isOk());
+		mockMvc.perform(get("/testdb")).andExpect(status().isOk());
+		mockMvc.perform(get("/admin/members")).andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(username = "admin", roles = "ADMIN")
+	void adminAccessMatrix() throws Exception {
+		mockMvc.perform(get("/mypage")).andExpect(status().isOk());
+		mockMvc.perform(get("/testdb")).andExpect(status().isOk());
+		mockMvc.perform(get("/admin/members")).andExpect(status().isOk());
+	}
+
+	// [추가 도전] 회원목록 메뉴는 USER 에게 숨기고, MANAGER 에게는 보인다.
+	@Test
+	@WithMockUser(username = "manager1", roles = "MANAGER")
+	void managerSeesMemberListMenuAndManagerBadge() throws Exception {
+		mockMvc.perform(get("/"))
+				.andExpect(content().string(containsString("href=\"/testdb\"")))
+				.andExpect(content().string(containsString("role-badge role-MANAGER")))
+				.andExpect(content().string(not(containsString("href=\"/admin/members\""))));
 	}
 
 	@Test
@@ -157,6 +225,7 @@ class AdminSecurityTests {
 		mockMvc.perform(get("/"))
 				.andExpect(content().string(containsString("내 정보")))
 				.andExpect(content().string(containsString("role-badge role-USER")))
+				.andExpect(content().string(not(containsString("href=\"/testdb\""))))
 				.andExpect(content().string(not(containsString("href=\"/admin/members\""))));
 	}
 

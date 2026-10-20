@@ -99,6 +99,22 @@
 - 결과 : 비로그인 `/admin/members` → 302 로그인 화면, USER → 403 접근 거부 화면, ADMIN → 200 회원 관리
 - 테스트 : [AdminSecurityTests.java](src/test/java/com/example/demo/AdminSecurityTests.java) - 302/403/200, USER의 권한 상승 차단, 서비스 직접 호출도 `@PreAuthorize`로 차단(이중 잠금), 허용되지 않는 권한 거부, 메뉴·배지 표시
 
+### 6주차 연습문제 - 권한 관리 개선하기
+
+- ① 관리자 본인 보호
+  - `MemberService.changeRole()`, `deleteMember()`에서 `SecurityContextHolder`로 로그인 아이디를 꺼내 대상이 본인이면 거부
+  - 관리자가 자기 자신을 USER로 바꾸거나 삭제하면 "자기 자신의 권한 변경·삭제는 할 수 없습니다." 출력 → 관리자 0명 방지
+- ② 매니저(MANAGER) 권한 추가
+  - `ROLES` 화이트리스트에 `MANAGER` 추가 → 회원 관리에서 MANAGER 부여 가능
+  - `SecurityConfig`에 `.requestMatchers("/testdb").hasAnyRole("ADMIN", "MANAGER")` 추가
+
+  | 주소 | USER | MANAGER | ADMIN |
+  |---|---|---|---|
+  | `/mypage` | ✓ | ✓ | ✓ |
+  | `/testdb` (회원목록) | 403 | ✓ | ✓ |
+  | `/admin/**` (회원 관리) | 403 | 403 | ✓ |
+- 추가 도전 : `index.html`의 회원목록 메뉴에 `sec:authorize="hasAnyRole('ADMIN', 'MANAGER')"` → USER에게는 메뉴도 숨김
+
 ## Lighthouse 성능 점검
 
 - 2026-09-16 로컬 서버 측정: 데스크톱 96점, 모바일 60점
