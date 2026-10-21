@@ -159,6 +159,43 @@ class RestApiTests {
 		assertTrue(memberRepository.findByUsername("student1").isEmpty());
 	}
 
+	// [연습문제 ①] 회원 검색 : 아이디나 이름에 검색어가 들어간 회원만
+	@Test
+	void searchByUsernameOrName() throws Exception {
+		mockMvc.perform(get("/api/admin/members").param("keyword", "student").with(httpBasic("admin", "1234")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].username").value("student1"));
+		mockMvc.perform(get("/api/admin/members").param("keyword", "관리").with(httpBasic("admin", "1234")))
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].username").value("admin"));
+		mockMvc.perform(get("/api/admin/members").param("keyword", "없는사람").with(httpBasic("admin", "1234")))
+				.andExpect(jsonPath("$.length()").value(0));
+		mockMvc.perform(get("/api/admin/members").param("keyword", "").with(httpBasic("admin", "1234")))
+				.andExpect(jsonPath("$.length()").value(2));
+	}
+
+	// [연습문제 ②] @RestControllerAdvice : try-catch 를 지운 뒤에도 같은 상태 코드·본문
+	@Test
+	void errorsAreHandledInOnePlace() throws Exception {
+		mockMvc.perform(patch("/api/admin/members/{id}/role", 9999L).with(httpBasic("admin", "1234"))
+						.contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ADMIN\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.error").value("회원이 존재하지 않습니다."));
+		mockMvc.perform(delete("/api/admin/members/{id}", admin.getId()).with(httpBasic("admin", "1234")))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.error").value("자기 자신의 권한 변경·삭제는 할 수 없습니다."));
+	}
+
+	@Test
+	void brokenJsonIs400WithoutTrace() throws Exception {
+		mockMvc.perform(post("/api/admin/members").with(httpBasic("admin", "1234"))
+						.contentType(MediaType.APPLICATION_JSON).content("{\"username\": \"x\",}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.error").value("요청 JSON 형식이 올바르지 않습니다."))
+				.andExpect(jsonPath("$.trace").doesNotExist());
+	}
+
 	// 단계 8 : 제공 화면
 	@Test
 	void membersApiPageIsServedToAdmin() throws Exception {

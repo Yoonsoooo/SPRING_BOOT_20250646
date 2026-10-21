@@ -140,6 +140,18 @@
 - 테스트 : [RestApiTests.java](src/test/java/com/example/demo/RestApiTests.java) - Basic 인증으로 401/200/201/204/400/403/404, 응답에 password 없음, 제공 화면 연결
   - `httpBasic()` 추가 후 Accept 헤더 없는 요청은 401이 되므로, 기존 302 테스트는 브라우저처럼 `Accept: text/html`을 보내도록 수정
 
+### 7주차 연습문제 - REST API 개선하기
+
+- ① 회원 검색 API : `GET /api/admin/members?keyword=student`
+  - `@RequestParam(required = false) String keyword` → 검색어가 없으면 전체 목록, 있으면 검색
+  - [MemberRepository.java](src/main/java/com/example/demo/model/repository/MemberRepository.java) : `findByUsernameContainingOrNameContainingOrderByIdAsc` → 아이디나 이름에 검색어가 들어간 회원만
+  - 확인 : 제공 화면(`/admin/members-api`) 검색창에 `student` → student1 만 출력
+- ② 오류 처리 한 곳에 모으기 : [ApiExceptionHandler.java](src/main/java/com/example/demo/controller/ApiExceptionHandler.java) (신규)
+  - `@RestControllerAdvice(annotations = RestController.class)` → JSON API 컨트롤러에만 적용
+  - `IllegalArgumentException` → 400 `{"error": "..."}` : 등록·권한 변경·삭제의 반복되던 try-catch 제거, 지운 뒤에도 상태 코드·본문 동일
+  - JSON 형식 오류(`HttpMessageNotReadableException`) → 400 `{"error": "요청 JSON 형식이 올바르지 않습니다."}` : trace(서버 내부 정보) 숨김
+- 테스트 : [RestApiTests.java](src/test/java/com/example/demo/RestApiTests.java) - 검색 결과, 서비스 오류 400, 잘못된 JSON에 trace 없음
+
 ## Lighthouse 성능 점검
 
 - 2026-09-16 로컬 서버 측정: 데스크톱 96점, 모바일 60점

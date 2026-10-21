@@ -59,6 +59,11 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
         return memberRepository.findAll(Sort.by("id"));
     }
 
+    // [7주차 연습문제 ①] 아이디나 이름에 검색어가 들어간 회원
+    public List<Member> search(String keyword) {
+        return memberRepository.findByUsernameContainingOrNameContainingOrderByIdAsc(keyword, keyword);
+    }
+
     // [7주차] id 로 회원 1명 조회 (없으면 빈 Optional → API 에서 404)
     public Optional<Member> findById(Long id) {
         return memberRepository.findById(id);
