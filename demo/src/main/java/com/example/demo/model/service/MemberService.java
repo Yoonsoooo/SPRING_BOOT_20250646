@@ -1,6 +1,7 @@
 package com.example.demo.model.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -27,6 +28,10 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
     private PasswordEncoder passwordEncoder;
 
     public Member signup(MemberForm form) { // 회원가입
+        // [7주차] JSON 요청에는 HTML 의 required 검사가 없으므로 서버에서 빈 값 검사
+        if (isBlank(form.getUsername()) || isBlank(form.getPassword()) || isBlank(form.getName())) {
+            throw new IllegalArgumentException("아이디, 비밀번호, 이름은 필수입니다.");
+        }
         if (memberRepository.existsByUsername(form.getUsername())) {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
@@ -54,8 +59,13 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
         return memberRepository.findAll(Sort.by("id"));
     }
 
+    // [7주차] id 로 회원 1명 조회 (없으면 빈 Optional → API 에서 404)
+    public Optional<Member> findById(Long id) {
+        return memberRepository.findById(id);
+    }
+
     @PreAuthorize("hasRole('ADMIN')") // [6주차] 관리자만 실행 가능 (2차 잠금)
-    public void changeRole(Long id, String role) { // 권한 변경
+    public Member changeRole(Long id, String role) { // 권한 변경 ([7주차] 바뀐 회원을 돌려준다)
         if (!ROLES.contains(role)) { // 허용된 권한만
             throw new IllegalArgumentException("허용되지 않는 권한입니다 : " + role);
         }
@@ -63,7 +73,7 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
         checkNotMyself(member); // [6주차 연습문제 ①] 관리자 본인 보호
         member.setRole(role);
-        memberRepository.save(member); // UPDATE (id 가 있으면 수정)
+        return memberRepository.save(member); // UPDATE (id 가 있으면 수정)
     }
 
     @PreAuthorize("hasRole('ADMIN')") // [6주차] 관리자만 실행 가능 (2차 잠금)
@@ -82,6 +92,8 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
             throw new IllegalArgumentException("자기 자신의 권한 변경·삭제는 할 수 없습니다.");
         }
     }
+
+    private boolean isBlank(String value) { return value == null || value.isBlank(); } // [7주차] 빈 값 검사
 
     @Override // 로그인 시 시큐리티가 자동 호출
     public UserDetails loadUserByUsername(String username)

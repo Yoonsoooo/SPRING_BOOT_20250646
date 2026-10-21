@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.demo.model.domain.Member;
@@ -54,7 +55,8 @@ class AdminSecurityTests {
 	// 슬라이드 22 : 세 가지 상태로 /admin/members 접속
 	@Test
 	void adminPageRedirectsAnonymousToLogin() throws Exception {
-		mockMvc.perform(get("/admin/members"))
+		// [7주차] httpBasic 추가 후 : 브라우저(Accept: text/html)는 여전히 로그인 화면으로 이동
+		mockMvc.perform(get("/admin/members").accept(MediaType.TEXT_HTML))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/login"));
 	}

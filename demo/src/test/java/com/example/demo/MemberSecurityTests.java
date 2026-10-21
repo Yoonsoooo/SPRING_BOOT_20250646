@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import jakarta.servlet.http.Cookie;
@@ -69,7 +70,8 @@ class MemberSecurityTests {
 
 	@Test
 	void memberListRedirectsToLoginWhenAnonymous() throws Exception {
-		mockMvc.perform(get("/testdb"))
+		// [7주차] httpBasic 추가 후 : 브라우저(Accept: text/html)는 여전히 로그인 화면으로 이동
+		mockMvc.perform(get("/testdb").accept(MediaType.TEXT_HTML))
 				.andExpect(status().is3xxRedirection())
 				.andExpect(redirectedUrl("/login"));
 	}

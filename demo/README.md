@@ -115,6 +115,31 @@
   | `/admin/**` (회원 관리) | 403 | 403 | ✓ |
 - 추가 도전 : `index.html`의 회원목록 메뉴에 `sec:authorize="hasAnyRole('ADMIN', 'MANAGER')"` → USER에게는 메뉴도 숨김
 
+## 7주차 - REST API와 JSON
+
+7주차 회원 관리 REST API(JSON) 완료
+
+- 교수님 제공 화면 적용 : [admin/members-api.html](src/main/resources/templates/admin/members-api.html) (fetch 로 API 호출, 오른쪽 기록창), [admin/members.html](src/main/resources/templates/admin/members.html)에 "API 버전으로 보기" 링크
+- 자바 파일
+  - [MemberApiController.java](src/main/java/com/example/demo/controller/MemberApiController.java) (신규) : `GET /api/hello`(누구나), `GET /api/me`(로그인한 내 정보)
+  - [MemberResponse.java](src/main/java/com/example/demo/model/dto/MemberResponse.java) (신규) : 응답 DTO(record) → id, username, name, role 만 내보내고 password(해시)는 숨김
+  - [RoleRequest.java](src/main/java/com/example/demo/model/dto/RoleRequest.java) (신규) : 권한 변경 요청 본문 `{"role": "ADMIN"}`
+  - [AdminApiController.java](src/main/java/com/example/demo/controller/AdminApiController.java) (신규) : `/api/admin/members` 목록·1명 조회·등록·권한 변경·삭제 (`ResponseEntity`로 상태 코드 지정)
+  - [SecurityConfig.java](src/main/java/com/example/demo/config/SecurityConfig.java) : `/api/hello` 허용, `/api/admin/**` ADMIN 전용, `httpBasic()`, `/api/**` CSRF 제외, 로그인 안 한 API 요청은 302 대신 401
+  - [MemberService.java](src/main/java/com/example/demo/model/service/MemberService.java) : `findById`, 회원가입 빈 값 검사, `changeRole()`이 바뀐 회원을 반환
+  - [AdminController.java](src/main/java/com/example/demo/controller/AdminController.java) : `/admin/members-api` 화면
+- 인증 : 브라우저는 로그인 세션 쿠키, Postman은 요청마다 Basic 인증(아이디:비밀번호) → 같은 API, 같은 결과
+
+  | 메서드 · 주소 | 하는 일 | 결과 |
+  |---|---|---|
+  | `GET /api/admin/members` | 회원 목록 | 200 (비밀번호 없음), USER → 403 |
+  | `GET /api/admin/members/{id}` | 회원 1명 | 200, 없으면 404 |
+  | `POST /api/admin/members` | 회원 등록 | 201 + Location, 중복·빈 값 400, `role` 몰래 넣어도 USER |
+  | `PATCH /api/admin/members/{id}/role` | 권한 변경 | 200, `SUPER` 400, 본인 변경 400 |
+  | `DELETE /api/admin/members/{id}` | 회원 삭제 | 204 |
+- 테스트 : [RestApiTests.java](src/test/java/com/example/demo/RestApiTests.java) - Basic 인증으로 401/200/201/204/400/403/404, 응답에 password 없음, 제공 화면 연결
+  - `httpBasic()` 추가 후 Accept 헤더 없는 요청은 401이 되므로, 기존 302 테스트는 브라우저처럼 `Accept: text/html`을 보내도록 수정
+
 ## Lighthouse 성능 점검
 
 - 2026-09-16 로컬 서버 측정: 데스크톱 96점, 모바일 60점
