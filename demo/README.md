@@ -152,6 +152,28 @@
   - JSON 형식 오류(`HttpMessageNotReadableException`) → 400 `{"error": "요청 JSON 형식이 올바르지 않습니다."}` : trace(서버 내부 정보) 숨김
 - 테스트 : [RestApiTests.java](src/test/java/com/example/demo/RestApiTests.java) - 검색 결과, 서비스 오류 400, 잘못된 JSON에 trace 없음
 
+## 9주차 - 게시판 CRUD와 본인 확인
+
+9주차 게시판(CRUD) + 본인 확인 완료
+
+- 교수님 제공 화면 적용 : [board/list.html](src/main/resources/templates/board/list.html), [board/detail.html](src/main/resources/templates/board/detail.html), [board/form.html](src/main/resources/templates/board/form.html)(글쓰기·수정 공용, `postId` 유무로 구분), [error/404.html](src/main/resources/templates/error/404.html), [board.css](src/main/resources/static/css/board.css), [index.html](src/main/resources/templates/index.html)에 "게시판" 메뉴만 추가
+- 자바 파일
+  - [Post.java](src/main/java/com/example/demo/model/domain/Post.java) (신규) : `posts` 테이블, 작성자 `@ManyToOne(fetch = LAZY)` + `@JoinColumn(name = "member_id")` (FK → member.id)
+  - [PostForm.java](src/main/java/com/example/demo/model/dto/PostForm.java) (신규) : 제목·내용만 받음 → 작성자 바꿔치기 방지
+  - [PostRepository.java](src/main/java/com/example/demo/model/repository/PostRepository.java) (신규) : `JpaRepository<Post, Long>`
+  - [PostService.java](src/main/java/com/example/demo/model/service/PostService.java) (신규) : 목록(최신순)·글쓰기(작성자 = 로그인 회원)·상세(없으면 404)·수정·삭제, `checkWriter()`·`isAdmin()` 본인 확인
+  - [BoardController.java](src/main/java/com/example/demo/controller/BoardController.java) (신규) : `/board` 목록, `/board/{id}` 상세, `/board/write`, `/board/{id}/edit`, `/board/{id}/delete`
+  - [SecurityConfig.java](src/main/java/com/example/demo/config/SecurityConfig.java) : `.requestMatchers("/board", "/board/{id:\d+}").permitAll()` → 목록·상세만 누구나, 나머지는 로그인
+
+  | 주소 | 비로그인 | 글쓴이 | 다른 USER | ADMIN |
+  |---|---|---|---|---|
+  | `GET /board`, `/board/{id}` | ✓ | ✓ | ✓ | ✓ |
+  | `/board/write` | 로그인 화면 | ✓ | ✓ | ✓ |
+  | `/board/{id}/edit` | 로그인 화면 | ✓ | 403 | 403 (수정은 본인만) |
+  | `POST /board/{id}/delete` | 로그인 화면 | ✓ | 403 | ✓ (관리자 삭제) |
+- 테스트 : [BoardTests.java](src/test/java/com/example/demo/BoardTests.java) - 비로그인 목록·글쓰기 차단, 작성자 자동 지정, 빈 제목 오류, CSRF 403, 없는 글 404, 본인 수정·삭제, 남의 글 수정·삭제 403, 관리자 삭제 가능·수정 403
+- 정리 문서 : [9주차_게시판CRUD_본인확인.md](../9주차_게시판CRUD_본인확인.md)
+
 ## Lighthouse 성능 점검
 
 - 2026-09-16 로컬 서버 측정: 데스크톱 96점, 모바일 60점
