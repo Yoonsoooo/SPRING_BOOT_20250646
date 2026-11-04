@@ -55,6 +55,16 @@ public class PostService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "글이 존재하지 않습니다."));
     }
 
+    public Post read(Long id) { // [연습문제 ①] 상세 보기 : 열 때마다 조회수 1 증가
+        Post post = findById(id);
+        post.setViewCount(post.getViewCount() + 1);
+        return postRepository.save(post); // id 가 있으니 UPDATE
+    }
+
+    public List<Post> findMyPosts(String username) { // [연습문제 ②] 내가 쓴 글 (최신 글이 위로)
+        return postRepository.findByAuthor_UsernameOrderByIdDesc(username);
+    }
+
     public Post findForEdit(Long id) { // 수정 화면에 보여 줄 글 (본인 글만)
         Post post = findById(id);
         checkWriter(post); // ★ 추가

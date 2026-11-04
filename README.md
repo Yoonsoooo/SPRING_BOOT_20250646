@@ -14,4 +14,4 @@
 - 5주차 - 로그인/로그아웃, 암호화 완료 (Spring Security + BCrypt, 회원가입·로그인·로그아웃) + 연습문제(로그인 상태 유지, 비밀번호 확인)
 - 6주차 - 권한(ROLE) 접근 제어, 관리자 페이지 분리 완료 (USER/ADMIN, `/admin/**` 잠금, `@PreAuthorize` 이중 잠금, 403 화면) + 연습문제(관리자 본인 보호, MANAGER 권한)
 - 7주차 - 회원 관리 REST API(JSON) 완료 (`@RestController`, 응답 DTO로 비밀번호 숨김, Basic 인증·401, GET/POST/PATCH/DELETE + 상태 코드, fetch 화면 연결) + 연습문제(회원 검색 API, `@RestControllerAdvice` 오류 처리)
-- 9주차 - 게시판(CRUD) + 본인 확인 완료 (`Post`↔`Member` `@ManyToOne` 작성자 연결, 글쓰기·목록·상세·수정·삭제, 없는 글 404, 남의 글 수정·삭제 403, 관리자는 삭제만 가능) · 정리: [9주차_게시판CRUD_본인확인.md](9주차_게시판CRUD_본인확인.md)
+- 9주차 - 게시판(CRUD) + 본인 확인 완료 (`Post`↔`Member` `@ManyToOne` 작성자 연결, 글쓰기·목록·상세·수정·삭제, 없는 글 404, 남의 글 수정·삭제 403, 관리자는 삭제만 가능) + 연습문제(조회수, 내가 쓴 글 `/board/my`)

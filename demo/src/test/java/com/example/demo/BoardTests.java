@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -188,6 +189,39 @@ class BoardTests {
 		mockMvc.perform(post("/board/" + post.getId() + "/delete").with(csrf()))
 				.andExpect(redirectedUrl("/board?deleted"));
 		assertFalse(postRepository.existsById(post.getId()));
+	}
+
+	// [연습문제 ①] 같은 글 상세를 3번 열기 → 조회 3
+	@Test
+	void detailIncreasesViewCount() throws Exception {
+		Post post = savePost("조회수 글", student1);
+		for (int i = 0; i < 3; i++) {
+			mockMvc.perform(get("/board/" + post.getId())).andExpect(status().isOk());
+		}
+		assertEquals(3, postRepository.findById(post.getId()).orElseThrow().getViewCount());
+	}
+
+	// [연습문제 ②] student1 → 내가 쓴 글 : student1 의 글만, 제목 "내가 쓴 글", 최신 글이 위로
+	@Test
+	@WithMockUser(username = "student1", roles = "USER")
+	void myPostsShowsOnlyLoginUsersPostsNewestFirst() throws Exception {
+		savePost("student1 첫 글", student1);
+		savePost("student3 의 글", student3);
+		savePost("student1 둘째 글", student1);
+		mockMvc.perform(get("/board/my"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("내가 쓴 글")))
+				.andExpect(content().string(containsString("전체 2개")))
+				.andExpect(content().string(not(containsString("student3 의 글"))))
+				.andExpect(content().string(stringContainsInOrder("student1 둘째 글", "student1 첫 글")));
+	}
+
+	// [연습문제 ②] 로그인 안 하고 /board/my → 로그인 화면
+	@Test
+	void anonymousMyPostsRedirectsToLogin() throws Exception {
+		mockMvc.perform(get("/board/my").accept(MediaType.TEXT_HTML))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login"));
 	}
 
 	private Post savePost(String title, Member author) {
