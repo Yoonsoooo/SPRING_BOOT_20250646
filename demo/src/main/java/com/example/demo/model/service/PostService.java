@@ -3,6 +3,7 @@ package com.example.demo.model.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.Page;
 
 import com.example.demo.model.domain.Member;
 import com.example.demo.model.domain.Post;
@@ -48,6 +50,17 @@ public class PostService {
         if (form.getTitle().trim().length() > 100) {
             throw new IllegalArgumentException("제목은 100자까지 입력할 수 있습니다.");
         }
+    }
+
+    public static final int PAGE_SIZE = 10; // 한 페이지에 보여 줄 글 수
+    // [10주차] 단계 1 : 페이지 목록 (page 는 0 부터) → 단계 2 에서 keyword 를 받도록 바꿈
+    // [10주차] 단계 2 : 페이지 목록 + 검색 (검색어가 없으면 전체)
+    public Page<Post> findPage(String keyword, int page) {
+        PageRequest pageable = PageRequest.of(Math.max(page, 0), PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+        if (keyword == null || keyword.isBlank()) { // 앞이 true면 뒤를 실행하지 않음
+            return postRepository.findAll(pageable);
+        }
+        return postRepository.search(keyword.trim(), pageable); // 검색 결과도 10개씩
     }
 
     public Post findById(Long id) { // 글 1개 (없으면 404 → templates/error/404.html)

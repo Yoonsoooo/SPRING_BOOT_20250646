@@ -12,7 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.demo.model.domain.Member;
 import com.example.demo.model.dto.MemberForm;
+import com.example.demo.model.repository.CommentRepository;
 import com.example.demo.model.repository.MemberRepository;
+import com.example.demo.model.repository.PostRepository;
 
 @Service // 서비스 등록
 public class MemberService implements UserDetailsService { // 로그인을 위한 인터페이스 제공
@@ -26,6 +28,11 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
 
     @Autowired // SecurityConfig 에 등록한 BCryptPasswordEncoder 주입
     private PasswordEncoder passwordEncoder;
+
+    @Autowired // ① 필드 추가
+    private PostRepository postRepository;
+    @Autowired
+    private CommentRepository commentRepository;
 
     public Member signup(MemberForm form) { // 회원가입
         // [7주차] JSON 요청에는 HTML 의 required 검사가 없으므로 서버에서 빈 값 검사
@@ -86,6 +93,9 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
         checkNotMyself(member); // [6주차 연습문제 ①] 관리자 본인 보호
+        if (postRepository.existsByAuthor(member) || commentRepository.existsByAuthor(member)) {
+            throw new IllegalArgumentException("작성한 글이나 댓글이 있는 회원은 삭제할 수 없습니다.");
+        }
         memberRepository.delete(member); // DELETE
     }
 
@@ -98,7 +108,9 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
         }
     }
 
-    private boolean isBlank(String value) { return value == null || value.isBlank(); } // [7주차] 빈 값 검사
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    } // [7주차] 빈 값 검사
 
     @Override // 로그인 시 시큐리티가 자동 호출
     public UserDetails loadUserByUsername(String username)
@@ -109,7 +121,7 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
         return User.builder() // 시큐리티용 사용자 객체로 변환
                 .username(member.getUsername())
                 .password(member.getPassword()) // 암호화 값 → matches()로 비교
-                .roles(member.getRole())        // USER → ROLE_USER
+                .roles(member.getRole()) // USER → ROLE_USER
                 .build();
     }
 }

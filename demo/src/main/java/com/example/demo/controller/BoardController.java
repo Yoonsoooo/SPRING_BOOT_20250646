@@ -3,11 +3,13 @@ package com.example.demo.controller;
 import java.security.Principal;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import com.example.demo.model.domain.Post;
 import com.example.demo.model.dto.PostForm;
+import com.example.demo.model.service.CommentService;
 import com.example.demo.model.service.PostService;
 
 @Controller // 게시판 화면 컨트롤러
@@ -15,11 +17,23 @@ import com.example.demo.model.service.PostService;
 public class BoardController {
     @Autowired
     PostService postService;
+    @Autowired // ① 필드 추가 (postService 아래)
+    CommentService commentService;
 
-    @GetMapping // 목록 : GET /board (누구나)
-    public String list(Model model) {
-        List<Post> posts = postService.findAll();
-        model.addAttribute("posts", posts);
+    // @GetMapping // 목록 : GET /board (누구나)
+    // public String list(Model model) {
+    // List<Post> posts = postService.findAll();
+    // model.addAttribute("posts", posts);
+    // return "board/list";
+    // }
+
+    @GetMapping // 목록 : GET /board?page=0&keyword=스프링 (누구나)
+    public String list(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String keyword, Model model) {
+        Page<Post> posts = postService.findPage(keyword, page);
+        model.addAttribute("posts", posts.getContent());
+        model.addAttribute("page", posts);
+        model.addAttribute("keyword", keyword); // 검색창에 검색어 유지, 페이지 링크에도 붙인다
         return "board/list";
     }
 
@@ -50,6 +64,7 @@ public class BoardController {
     public String detail(@PathVariable Long id, Model model) {
         Post post = postService.read(id); // [연습문제 ①] 조회수 1 증가 후 글 1개
         model.addAttribute("post", post);
+        model.addAttribute("comments", commentService.findByPost(post)); // ② 댓글 목록 → 화면에 댓글 영역
         return "board/detail";
     }
 

@@ -620,6 +620,44 @@ private boolean isAdmin() {
 *② 로그인 안 하고 /board/my → 로그인 화면*
 
 
+## 10주차 - 페이징 검색과 댓글
+
+10주차 페이징·검색·댓글 완료
+
+- 교수님 제공 화면 적용 : [board/list.html](src/main/resources/templates/board/list.html)(페이지 번호 + 검색창), [board/detail.html](src/main/resources/templates/board/detail.html)(댓글 영역), [board.css](src/main/resources/static/css/board.css)(검색·페이지·댓글 스타일)
+- 테스트 글 105개 : [sql/week10_posts105.sql](sql/week10_posts105.sql) (MySQL 8, 작성자 admin, 8번째 글마다 "스프링 스터디 모집" → 검색 실습)
+- 자바 파일
+  - 단계 1 페이징 : [PostService.java](src/main/java/com/example/demo/model/service/PostService.java) `PageRequest.of(Math.max(page, 0), PAGE_SIZE, Sort.by(DESC, "id"))` → `findAll(pageable)` (`LIMIT 10 OFFSET page*10` + `count` 쿼리), [BoardController.java](src/main/java/com/example/demo/controller/BoardController.java) `list()` 에서 `posts`(이번 페이지 글)와 `page`(페이지 정보)를 함께 넘김
+  - 단계 2 검색 : [PostRepository.java](src/main/java/com/example/demo/model/repository/PostRepository.java) `@Query("SELECT p FROM Post p WHERE p.title LIKE %:keyword% OR p.content LIKE %:keyword%")` + `Pageable`, 검색어가 없으면 전체 목록, 있으면 `trim()` 후 검색. `keyword` 를 화면에 다시 넘겨 검색창·페이지 링크에 유지
+  - 단계 3 댓글 쓰기 : [Comment.java](src/main/java/com/example/demo/model/domain/Comment.java)(신규, `comments` 테이블, `post_id`·`member_id` FK 2개, `LAZY`), [CommentRepository.java](src/main/java/com/example/demo/model/repository/CommentRepository.java)(신규, `findByPostOrderByIdAsc`), [CommentService.java](src/main/java/com/example/demo/model/service/CommentService.java)(신규, 1~500자 검사, 작성자 = 로그인 회원), [CommentController.java](src/main/java/com/example/demo/controller/CommentController.java)(신규, `POST /board/{postId}/comments` → `redirect` (PRG))
+  - 단계 4 댓글 삭제 : `POST /board/{postId}/comments/{id}/delete`, 없는 댓글 404, 남의 댓글 403(`AccessDeniedException`), 관리자는 삭제 가능(`isAdmin()`)
+  - 단계 5 양방향 + cascade : [Post.java](src/main/java/com/example/demo/model/domain/Post.java) `@OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)` + `@ToString.Exclude @EqualsAndHashCode.Exclude`(무한 반복 방지) → 댓글 달린 글 삭제 시 댓글부터 `DELETE`, 목록 제목 옆 댓글 수 `[3]`
+  - 단계 6 회원 삭제 보호 : `PostRepository`·`CommentRepository` 에 `existsByAuthor(Member)`, [MemberService.java](src/main/java/com/example/demo/model/service/MemberService.java) `deleteMember()` 에서 글·댓글이 있으면 `IllegalArgumentException` → FK 오류 500 대신 400 + 안내 문구
+  - `SecurityConfig` 는 수정하지 않음 : `/board?page=…&keyword=…` 는 `/board` 에 포함되어 누구나, `/board/{id}/comments/**` 는 `anyRequest().authenticated()` 로 로그인 필요
+
+  | 주소 | 비로그인 | 댓글 쓴 사람 | 다른 USER | ADMIN |
+  |---|---|---|---|---|
+  | `GET /board?page=0&keyword=스터디` | ✓ | ✓ | ✓ | ✓ |
+  | `POST /board/{postId}/comments` | 로그인 화면 | ✓ | ✓ | ✓ |
+  | `POST /board/{postId}/comments/{id}/delete` | 로그인 화면 | ✓ | 403 | ✓ (관리자 삭제) |
+
+- 확인 표
+
+  | 단계 | 하는 일 | 기대 결과 | 결과 |
+  |---|---|---|---|
+  | 1 | `/board` (글 105개) | 최신 10개 + "1 / 11 페이지" | ✓ |
+  | 1 | `/board?page=-1`, `/board?page=999` | 첫 페이지 / 빈 목록 (오류 없음) | ✓ |
+  | 2 | "스터디" 검색 | 13개, 2페이지, 페이지 링크에 keyword 유지 | ✓ |
+  | 2 | `' OR 1=1 --` 검색 | 0개 (파라미터 바인딩 → SQL 인젝션 안 됨) | ✓ |
+  | 3 | 로그인 안 함 → 상세 | 댓글은 보이고 "로그인하면 댓글을 쓸 수 있습니다." | ✓ |
+  | 3 | 빈 댓글 / 500자 초과 | "댓글은 1~500자로 입력하세요." | ✓ |
+  | 4 | student1 이 student3 의 댓글 삭제 | 403 | ✓ |
+  | 4 | admin 이 남의 댓글 삭제 | 삭제됨 | ✓ |
+  | 5 | 댓글 달린 글 삭제 | 댓글도 함께 삭제 (500 아님) | ✓ |
+  | 6 | 글·댓글 있는 회원 삭제 | 400 + "작성한 글이나 댓글이 있는 회원은 삭제할 수 없습니다." | ✓ |
+
+- 테스트 : [PagingCommentTests.java](src/test/java/com/example/demo/PagingCommentTests.java) (18개) - 페이징(첫 페이지·2페이지·잘못된 page), 검색(제목+내용, 검색 결과 페이징, 결과 없음, SQL 인젝션), 댓글 쓰기(비로그인 차단, 작성자 자동 지정, 빈 댓글·500자 초과, CSRF 403), 댓글 삭제(남의 댓글 403, 본인·관리자 삭제, 없는 댓글 404), 댓글 수 표시, cascade 글 삭제, 글·댓글 있는 회원 삭제 방지
+
 ## Lighthouse 성능 점검
 
 - 2026-09-16 로컬 서버 측정: 데스크톱 96점, 모바일 60점

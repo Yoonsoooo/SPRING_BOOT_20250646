@@ -1,5 +1,10 @@
 package com.example.demo.model.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -23,4 +28,9 @@ public class Post {
     private LocalDateTime updatedAt; // 수정 시간 (수정한 적 없으면 null)
     @Column(nullable = false) // 조회수 (연습문제에서 사용)
     private int viewCount = 0;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE) // 외래 키는 Comment.post 가 관리
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude // 글 → 댓글 → 글 … 무한 반복 방지
+    private List<Comment> comments = new ArrayList<>();
+
 }
