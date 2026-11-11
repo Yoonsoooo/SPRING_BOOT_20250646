@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// 10주차 페이징·검색·댓글 테스트 (단계 1~6 확인 표, 테스트용 H2 메모리 DB 사용)
+// 10주차 페이징·검색·댓글 테스트 (단계 1~6 + 연습문제 확인 표, 테스트용 H2 메모리 DB 사용)
 @SpringBootTest
 @AutoConfigureMockMvc
 class PagingCommentTests {
@@ -280,6 +280,57 @@ class PagingCommentTests {
 		Member writer10 = memberRepository.save(member("writer10", "글없음", "USER"));
 		memberService.deleteMember(writer10.getId());
 		assertFalse(memberRepository.existsById(writer10.getId()));
+	}
+
+	// [연습문제 1] 내가 쓴 글도 10개씩 + 페이지 번호, 링크는 /board/my
+	@Test
+	@WithMockUser(username = "student1", roles = "USER")
+	void myPostsArePaged() throws Exception {
+		savePosts(15); // student1 의 글 15개
+		savePost("student3 의 글", "내용", student3);
+		mockMvc.perform(get("/board/my"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("내가 쓴 글")))
+				.andExpect(content().string(containsString("전체 15개")))
+				.andExpect(content().string(containsString("1 / 2 페이지")))
+				.andExpect(content().string(containsString("/board/my?page=1")))
+				.andExpect(content().string(containsString(">테스트 글 15<")))
+				.andExpect(content().string(not(containsString(">테스트 글 5<"))))
+				.andExpect(content().string(not(containsString("student3 의 글"))));
+		mockMvc.perform(get("/board/my").param("page", "1"))
+				.andExpect(content().string(containsString("2 / 2 페이지")))
+				.andExpect(content().string(containsString(">테스트 글 5<")))
+				.andExpect(content().string(not(containsString(">테스트 글 15<"))));
+	}
+
+	// [연습문제 2] ① 범위 "작성자" + "관리" → 관리자가 쓴 글만, 선택 상자 유지
+	@Test
+	void searchByWriterName() throws Exception {
+		savePost("홍길동 글", "관리 방법", student1); // 내용에 "관리"가 있어도 작성자 검색에는 안 걸린다
+		savePost("관리자 공지", "내용", admin);
+		mockMvc.perform(get("/board").param("type", "writer").param("keyword", "관리"))
+				.andExpect(status().isOk())
+				.andExpect(content().string(containsString("관리자 공지")))
+				.andExpect(content().string(not(containsString("홍길동 글"))))
+				.andExpect(content().string(containsString("<option value=\"writer\" selected=\"selected\">")));
+		mockMvc.perform(get("/board").param("type", "all").param("keyword", "관리"))
+				.andExpect(content().string(containsString("홍길동 글")))
+				.andExpect(content().string(containsString("관리자 공지")));
+	}
+
+	// [연습문제 2] ② 작성자 검색 결과 2페이지로 넘어가도 type·keyword 유지
+	@Test
+	void writerSearchKeepsTypeAcrossPages() throws Exception {
+		for (int i = 1; i <= 12; i++) {
+			savePost("공지 " + i, "내용", admin);
+		}
+		savePosts(3);
+		mockMvc.perform(get("/board").param("type", "writer").param("keyword", "관리자"))
+				.andExpect(content().string(containsString("1 / 2 페이지")))
+				.andExpect(content().string(containsString("type=writer")));
+		mockMvc.perform(get("/board").param("type", "writer").param("keyword", "관리자").param("page", "1"))
+				.andExpect(content().string(containsString("2 / 2 페이지")))
+				.andExpect(content().string(not(containsString(">테스트 글"))));
 	}
 
 	private void savePosts(int count) {

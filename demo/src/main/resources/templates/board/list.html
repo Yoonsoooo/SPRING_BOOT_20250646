@@ -73,7 +73,7 @@
 
                 <!-- [10주차] 검색 중일 때 안내 + 전체 목록으로 돌아가기 -->
                 <div th:if="${keyword != null and !#strings.isEmpty(keyword)}" class="search-info mb-3">
-                    <i class="bi-search me-1"></i><strong th:text="|'${keyword}'|">'스프링'</strong> 검색 결과
+                    <i class="bi-search me-1"></i><span th:if="${type == 'writer'}">작성자 </span><strong th:text="|'${keyword}'|">'스프링'</strong> 검색 결과
                     <strong th:text="${page != null ? page.totalElements : #lists.size(posts)}">0</strong>개
                     <a th:href="@{/board}" class="ms-2 small">전체 목록 보기</a>
                 </div>

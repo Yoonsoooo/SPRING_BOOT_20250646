@@ -15,4 +15,4 @@
 - 6주차 - 권한(ROLE) 접근 제어, 관리자 페이지 분리 완료 (USER/ADMIN, `/admin/**` 잠금, `@PreAuthorize` 이중 잠금, 403 화면) + 연습문제(관리자 본인 보호, MANAGER 권한)
 - 7주차 - 회원 관리 REST API(JSON) 완료 (`@RestController`, 응답 DTO로 비밀번호 숨김, Basic 인증·401, GET/POST/PATCH/DELETE + 상태 코드, fetch 화면 연결) + 연습문제(회원 검색 API, `@RestControllerAdvice` 오류 처리)
 - 9주차 - 게시판(CRUD) + 본인 확인 완료 (`Post`↔`Member` `@ManyToOne` 작성자 연결, 글쓰기·목록·상세·수정·삭제, 없는 글 404, 남의 글 수정·삭제 403, 관리자는 삭제만 가능) + 연습문제(조회수, 내가 쓴 글 `/board/my`)
-- 10주차 - 페이징·검색·댓글 완료 (`Pageable`/`Page` 10개씩 페이지 번호, JPQL `@Query` 제목+내용 검색·SQL 인젝션 방지, `Comment` 엔티티 `@ManyToOne` 글·작성자 연결, 댓글 쓰기·삭제(본인·관리자), `@OneToMany` cascade로 댓글 달린 글 삭제, 글·댓글 있는 회원 삭제 방지)
+- 10주차 - 페이징·검색·댓글 완료 (`Pageable`/`Page` 10개씩 페이지 번호, JPQL `@Query` 제목+내용 검색·SQL 인젝션 방지, `Comment` 엔티티 `@ManyToOne` 글·작성자 연결, 댓글 쓰기·삭제(본인·관리자), `@OneToMany` cascade로 댓글 달린 글 삭제, 글·댓글 있는 회원 삭제 방지) + 연습문제(내가 쓴 글 페이징, 작성자 검색)

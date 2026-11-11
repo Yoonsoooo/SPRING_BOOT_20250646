@@ -658,6 +658,31 @@ private boolean isAdmin() {
 
 - 테스트 : [PagingCommentTests.java](src/test/java/com/example/demo/PagingCommentTests.java) (18개) - 페이징(첫 페이지·2페이지·잘못된 page), 검색(제목+내용, 검색 결과 페이징, 결과 없음, SQL 인젝션), 댓글 쓰기(비로그인 차단, 작성자 자동 지정, 빈 댓글·500자 초과, CSRF 403), 댓글 삭제(남의 댓글 403, 본인·관리자 삭제, 없는 댓글 404), 댓글 수 표시, cascade 글 삭제, 글·댓글 있는 회원 삭제 방지
 
+### 10주차 연습문제 - 내가 쓴 글 페이징 & 작성자 검색
+
+- ① 내가 쓴 글 페이징 : `GET /board/my?page=0` → 내 글만 10개씩 + 페이지 번호
+  - [PostRepository.java](src/main/java/com/example/demo/model/repository/PostRepository.java) : `findByAuthor_Username(String username, Pageable pageable)` (9주차의 `List` + `OrderByIdDesc` 대신 정렬·10개씩을 `Pageable` 이 맡는다)
+  - [PostService.java](src/main/java/com/example/demo/model/service/PostService.java) : `findMyPosts(username, page)` 가 `Page<Post>` 를 돌려준다, 페이지 설정은 `pageRequest(page)` 로 목록·검색과 함께 사용
+  - [BoardController.java](src/main/java/com/example/demo/controller/BoardController.java) : `myPosts()` 가 `page` 와 `pageUrl`(`/board/my`)을 넘김 → 페이지 링크가 `/board/my?page=1` 로 이어진다
+- ② 작성자 검색 : 검색 범위 선택 상자(제목+내용 / 작성자)
+  - `PostRepository.searchByWriter()` : JPQL `SELECT p FROM Post p WHERE p.author.name LIKE %:name%` → `posts JOIN member` (작성자 이름으로 검색)
+  - `PostService.findPage(keyword, type, page)` : `type` 이 `writer` 면 작성자 검색, 아니면 제목+내용 검색
+  - `BoardController.list()` : `@RequestParam(defaultValue = "all") String type` 를 받아 `type` 을 넘김 → [list.html](src/main/resources/templates/board/list.html)의 선택 상자가 보이고, 선택값·페이지 링크(`type=writer`)가 유지된다
+
+  | 검색 범위 | JPQL | SQL 로 바꾸면 |
+  |---|---|---|
+  | 제목+내용 (단계 2) | `p.title LIKE … OR p.content LIKE …` | `posts` 만 조회 |
+  | 작성자 (연습문제) | `p.author.name LIKE …` | `posts JOIN member` (자동) |
+
+  | # | 하는 일 | 기대 결과 | 결과 |
+  |---|---|---|---|
+  | ① | admin 로그인 → 내가 쓴 글 (글 105개) | 10개 + 페이지 번호 | ✓ |
+  | ① | 2페이지 클릭 | 다음 10개, 주소 `/board/my?page=1` | ✓ |
+  | ② | 범위 "작성자" + "관리자" 검색 | 관리자가 쓴 글만, 선택 상자 "작성자" 유지 | ✓ |
+  | ② | 작성자 검색 결과 2페이지 | `type=writer` 가 유지되어 2페이지도 작성자 검색 결과 | ✓ |
+
+- 테스트 : [PagingCommentTests.java](src/test/java/com/example/demo/PagingCommentTests.java)에 3개 추가 (내가 쓴 글 페이징, 작성자 검색, 작성자 검색 2페이지 유지) → 총 21개
+
 ## Lighthouse 성능 점검
 
 - 2026-09-16 로컬 서버 측정: 데스크톱 96점, 모바일 60점
