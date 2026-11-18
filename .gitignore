@@ -1,3 +1,7 @@
 .pnpm-store/
 tmp/
 demo/tmp/
+
+### [11주차] 업로드한 사진은 깃에 올리지 않는다 ###
+uploads/
+demo/uploads/
