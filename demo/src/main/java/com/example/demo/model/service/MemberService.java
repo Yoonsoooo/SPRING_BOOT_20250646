@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.example.demo.model.domain.Member;
 import com.example.demo.model.dto.MemberForm;
 import com.example.demo.model.repository.CommentRepository;
+import com.example.demo.model.repository.EnrollmentRepository;
 import com.example.demo.model.repository.MemberRepository;
 import com.example.demo.model.repository.PostRepository;
 
@@ -33,6 +34,8 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
     private PostRepository postRepository;
     @Autowired
     private CommentRepository commentRepository;
+    @Autowired // [11주차 연습문제 2] 신청 내역이 있는 회원 삭제 막기
+    private EnrollmentRepository enrollmentRepository;
 
     public Member signup(MemberForm form) { // 회원가입
         // [7주차] JSON 요청에는 HTML 의 required 검사가 없으므로 서버에서 빈 값 검사
@@ -95,6 +98,9 @@ public class MemberService implements UserDetailsService { // 로그인을 위�
         checkNotMyself(member); // [6주차 연습문제 ①] 관리자 본인 보호
         if (postRepository.existsByAuthor(member) || commentRepository.existsByAuthor(member)) {
             throw new IllegalArgumentException("작성한 글이나 댓글이 있는 회원은 삭제할 수 없습니다.");
+        }
+        if (enrollmentRepository.existsByMember(member)) { // [11주차 연습문제 2] 신청 인원 계산이 어긋나지 않도록
+            throw new IllegalArgumentException("신청 내역이 있는 회원은 삭제할 수 없습니다.");
         }
         memberRepository.delete(member); // DELETE
     }

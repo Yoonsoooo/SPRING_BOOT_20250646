@@ -85,12 +85,11 @@
                                     <td th:text="|${enrollment.post.appliedCount} / ${enrollment.post.capacity}|">1 / 5</td>
                                     <td th:text="${#temporals.format(enrollment.createdAt, 'yyyy-MM-dd HH:mm')}">2026-11-17 10:00</td>
                                     <td>
-                                        <!--/* [11주차 연습문제 1] 신청 취소 : 이 주석을 풀면 취소 버튼이 보인다 (POST /cart/enrollments/{id}/cancel)
+                                        <!-- [11주차 연습문제 1] 신청 취소 : POST /cart/enrollments/{id}/cancel -->
                                         <form th:action="@{/cart/enrollments/{id}/cancel(id=${enrollment.id})}" method="post" class="m-0"
                                               onsubmit="return confirm('신청을 취소하시겠습니까?');">
                                             <button type="submit" class="btn btn-link btn-sm text-danger p-0"><i class="bi-x-circle me-1"></i>취소</button>
                                         </form>
-                                        */-->
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(enrollments)}">

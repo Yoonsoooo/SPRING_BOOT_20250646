@@ -12,6 +12,9 @@ import com.example.demo.model.repository.EnrollmentRepository;
 import com.example.demo.model.repository.MemberRepository;
 import com.example.demo.model.repository.PostRepository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service // [11주차] 단계 4 : 신청 서비스
 public class EnrollmentService {
@@ -53,5 +56,18 @@ public class EnrollmentService {
             postRepository.save(post); // ② UPDATE 신청 인원 + 1 (남은 자리 - 1)
         }
         return postIds.size();
+    }
+
+    // [11주차 연습문제 1] 신청 취소 : 신청 내역 삭제 + 신청 인원 - 1 (한 트랜잭션)
+    @Transactional
+    public void cancel(Long enrollmentId, String username) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "신청 내역이 존재하지 않습니다."));
+        if (!enrollment.getMember().getUsername().equals(username)) { // 본인 신청만 → 아니면 403
+            throw new AccessDeniedException("본인 신청만 취소할 수 있습니다.");
+        }
+        Post post = enrollment.getPost();
+        post.setAppliedCount(post.getAppliedCount() - 1); // save() 없이 변경 감지로 커밋 때 UPDATE
+        enrollmentRepository.delete(enrollment); // DELETE 신청 내역
     }
 }

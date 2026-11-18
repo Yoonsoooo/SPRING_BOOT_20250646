@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import com.example.demo.model.domain.Member;
 import com.example.demo.model.domain.Post;
 import com.example.demo.model.dto.PostForm;
+import com.example.demo.model.repository.EnrollmentRepository;
 import com.example.demo.model.repository.MemberRepository;
 import com.example.demo.model.repository.PostRepository;
 import java.util.Collection;
@@ -28,6 +29,8 @@ public class PostService {
     private MemberRepository memberRepository;
     @Autowired // [11주차] 단계 2 : 업로드 파일 저장소 (제공 코드)
     private FileStore fileStore;
+    @Autowired // [11주차 연습문제 2] 신청자가 있는 모집글 삭제 막기
+    private EnrollmentRepository enrollmentRepository;
 
     public List<Post> findAll() { // 전체 목록 (최신 글이 위로)
         return postRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
@@ -125,7 +128,12 @@ public class PostService {
         Post post = findById(id);
         if (!isAdmin())
             checkWriter(post); // ★ 추가 : 관리자는 누구 글이든 삭제 가능
-        postRepository.delete(post);
+        // [11주차 연습문제 2] 신청자가 있는 모집글은 삭제하지 않는다 (cascade 대신 막기)
+        if (enrollmentRepository.existsByPost(post)) {
+            throw new IllegalStateException("신청자가 있는 모집글은 삭제할 수 없습니다.");
+        }
+        postRepository.delete(post); // DELETE (댓글은 cascade 로 함께)
+        fileStore.delete(post.getPosterFile()); // [11주차 연습문제 2] DB 삭제 성공 후 포스터 파일도 삭제
     }
 
     private void checkWriter(Post post) { // 로그인한 사람이 글쓴이인지 → 아니면 403
