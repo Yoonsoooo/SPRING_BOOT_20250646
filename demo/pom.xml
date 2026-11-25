@@ -36,6 +36,12 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency> -->
 
+		<!-- 12주차: WebSocket + STOMP 실시간 알림 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
 		<!-- 4주차: JPA(ORM) 데이터베이스 연동 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
