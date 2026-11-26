@@ -86,5 +86,12 @@ public class EnrollmentService {
         Post post = enrollment.getPost();
         post.setAppliedCount(post.getAppliedCount() - 1); // save() 없이 변경 감지로 커밋 때 UPDATE
         enrollmentRepository.delete(enrollment); // DELETE 신청 내역
+        eventPublisher.publishEvent(SeatMessage.from(post)); // [12주차 연습문제 1] 남은 자리 + 1 을 커밋 뒤에 모두에게
+        String writer = post.getAuthor().getUsername();
+        if (!writer.equals(username)) { // [12주차 연습문제 1] 모집글 쓴 사람에게 취소 알림 (내 글이면 생략)
+            eventPublisher.publishEvent(new Notification(writer,
+                    enrollment.getMember().getName() + "님이 '" + post.getTitle() + "' 신청을 취소했습니다.",
+                    post.getId()));
+        }
     }
 }
